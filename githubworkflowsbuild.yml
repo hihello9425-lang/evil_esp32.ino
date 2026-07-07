@@ -1,0 +1,23 @@
+name: Build ESP32
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: arduino/setup-arduino-cli@v1
+      - name: Install ESP32 core
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@2.0.14
+      - name: Compile
+        run: |
+          mkdir sketch
+          mv evil_esp32.ino sketch/
+          arduino-cli compile --fqbn esp32:esp32:esp32 --output-dir build sketch/
+      - uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: build/*.bin
